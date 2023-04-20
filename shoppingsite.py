@@ -64,12 +64,6 @@ def add_to_cart(melon_id):
     page and display a confirmation message: 'Melon successfully added to
     cart'."""
 
-    if 'cart' not in session:
-        session['cart'] = {}
-
-    session['cart'][melon_id] = session['cart'].get(melon_id, 0) + 1
-    flash('The melon was successfully added to your cart')
-    print(session['cart'])
     # The logic here should be something like:
     #
     # - check if a "cart" exists in the session, and create one (an empty
@@ -79,14 +73,19 @@ def add_to_cart(melon_id):
     # - flash a success message
     # - redirect the user to the cart page
 
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    session['cart'][melon_id] = session['cart'].get(melon_id, 0) + 1
+    flash('The melon was successfully added to your cart')
+    print(session['cart'])
+
     return redirect("/cart")
 
 
 @app.route("/cart")
 def show_shopping_cart():
     """Display content of shopping cart."""
-
-    # TODO: Display the contents of the shopping cart.
 
     # The logic here will be something like:
     #
@@ -104,7 +103,24 @@ def show_shopping_cart():
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
 
-    return render_template("cart.html")
+    cart_list = []
+    total_cost = 0
+
+    # Checking if cart exists in session
+    if 'cart' in session:
+        cart = session['cart']
+
+        for melon_id in cart:
+            melon = melons.get_by_id(melon_id)
+            melon.qty = cart[melon_id]
+            melon.total_price = melon.qty * melon.price
+            cart_list.append(melon)
+            total_cost = total_cost + melon.total_price
+    else:
+        flash("Your cart is currently empty")
+        return redirect("/melons")
+
+    return render_template("cart.html", cart_list=cart_list, total_cost=total_cost)
 
 
 @app.route("/login", methods=["GET"])
